@@ -77,7 +77,7 @@ EnvObjectRecognition::EnvObjectRecognition(int rank, int numproc) :
   // env_params_.res = 0.05;
   // env_params_.theta_res = M_PI / 10; //8
 
-  env_params_.res = 0.1; //0.2
+  env_params_.res = 0.2; //0.2
   const int num_thetas = 16;
   env_params_.theta_res = 2 * M_PI / static_cast<double>(num_thetas); //8
 

@@ -68,7 +68,7 @@ target_link_libraries(object_recognition_node libvtkCommon.so libvtkFiltering.so
 rosbuild_add_executable(sim_test src/experiments/sim_test.cpp)
 target_link_libraries(sim_test ${PROJECT_NAME})
 target_link_libraries(sim_test libvtkCommon.so libvtkFiltering.so libvtkRendering.so libvtkIO.so
-  libvtkGraphics.so ${MPI_LIBRARIES})
+  libvtkGraphics.so)
 
 rosbuild_add_executable(experiments src/experiments/experiments.cpp)
 target_link_libraries(experiments ${PROJECT_NAME})

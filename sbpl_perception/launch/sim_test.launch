@@ -27,7 +27,7 @@ $(find sbpl_perception)/data/RAM/cad_models/odwalla_jug.ply]
        </rosparam>
 
 
-    <node pkg="sbpl_perception" type="sim_test" name="sim_test" output="screen" launch-prefix="mpirun -n 2" respawn="false">
+    <node pkg="sbpl_perception" type="sim_test" name="sim_test" output="screen" launch-prefix="mpirun -n 8" respawn="false">
       <param name="reference_frame" value="/base_link"/>
       <param name="image_debug" value="$(arg image_debug)"/>
       <param name="icp_succ" value="$(arg icp_succ)"/>
