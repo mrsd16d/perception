@@ -53,7 +53,6 @@ const string kDebugDir = ros::package::getPath("sbpl_perception") +
 static double diff = 0;
 #endif
 
-
 EnvObjectRecognition::EnvObjectRecognition(int rank, int numproc) : 
   image_debug_(false),
   id(rank),
