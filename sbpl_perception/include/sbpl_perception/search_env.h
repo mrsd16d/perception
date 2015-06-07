@@ -42,7 +42,7 @@
 #include <Eigen/Dense>
 #include <unordered_map>
 
-#define NUM_MODELS 3
+#define NUM_MODELS 4
 
 inline double WrapAngle(double x) {
   x = fmod(x, 360);

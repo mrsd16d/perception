@@ -53,11 +53,11 @@ const string kDebugDir = ros::package::getPath("sbpl_perception") +
 static double diff = 0;
 #endif
 
-EnvObjectRecognition::EnvObjectRecognition(int rank, int numproc) : 
+EnvObjectRecognition::EnvObjectRecognition(int rank, int numproc) :
   image_debug_(false),
   id(rank),
   num_proc(numproc) {
-  
+
   // OpenGL requires argc and argv
   char **argv;
   argv = new char *[2];
@@ -76,7 +76,7 @@ EnvObjectRecognition::EnvObjectRecognition(int rank, int numproc) :
   // env_params_.res = 0.05;
   // env_params_.theta_res = M_PI / 10; //8
 
-  env_params_.res = 0.2; //0.2
+  env_params_.res = 0.1; //0.2
   const int num_thetas = 16;
   env_params_.theta_res = 2 * M_PI / static_cast<double>(num_thetas); //8
 
@@ -134,9 +134,8 @@ EnvObjectRecognition::EnvObjectRecognition(int rank, int numproc) :
   pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 }
 
-EnvObjectRecognition::EnvObjectRecognition() : 
-  image_debug_(false)
- {
+EnvObjectRecognition::EnvObjectRecognition() :
+  image_debug_(false) {
   // OpenGL requires argc and argv
   char **argv;
   argv = new char *[2];
@@ -283,7 +282,8 @@ bool EnvObjectRecognition::IsValidPose(State s, int model_id, Pose p) {
   //                                             indices,
   //                                             sqr_dists, 1); //0.2
   // double obj_rad = 0.15; //0.15
-  double search_rad = obj_models_[model_id].GetCircumscribedRadius() + env_params_.res / 2.0;
+  double search_rad = obj_models_[model_id].GetCircumscribedRadius() +
+                      env_params_.res / 2.0;
   int num_neighbors_found = knn->radiusSearch(point, search_rad,
                                               indices,
                                               sqr_dists, 1); //0.2
@@ -381,53 +381,64 @@ bool EnvObjectRecognition::StatesEqualOrdered(const State &s1,
   return true;
 }
 
-void EnvObjectRecognition::DebugPrint(State s){
+void EnvObjectRecognition::DebugPrint(State s) {
   std::cout << "DebugPrint" << std::endl;
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@obj_ids printf for " << id << std::endl;
-  for(std::vector<int>::iterator obj_it = s.object_ids.begin(); obj_it != s.object_ids.end(); obj_it++) {
-   std::cout << *obj_it << std::endl;
+
+  for (std::vector<int>::iterator obj_it = s.object_ids.begin();
+       obj_it != s.object_ids.end(); obj_it++) {
+    std::cout << *obj_it << std::endl;
   }
 
   std::cout << "^^^^^^^^^^^^^^^^^^^^^^disc printf for " << id << std::endl;
-  for(std::vector<DiscPose>::iterator obj_it = s.disc_object_poses.begin(); obj_it != s.disc_object_poses.end(); obj_it++) {
+
+  for (std::vector<DiscPose>::iterator obj_it = s.disc_object_poses.begin();
+       obj_it != s.disc_object_poses.end(); obj_it++) {
     std::cout << "x = " << obj_it->x << "\t";
     std::cout << "y = " << obj_it->y << "\t";
     std::cout << "theta = " << obj_it->theta << std::endl;
   }
 
   std::cout << "***********************pose printf for " << id << std::endl;
-  for(std::vector<Pose>::iterator obj_it = s.object_poses.begin(); obj_it != s.object_poses.end(); obj_it++) {
+
+  for (std::vector<Pose>::iterator obj_it = s.object_poses.begin();
+       obj_it != s.object_poses.end(); obj_it++) {
     std::cout << "x = " << obj_it->x << "\t";
     std::cout << "y = " << obj_it->y << "\t";
     std::cout << "theta = " << obj_it->theta << std::endl;
   }
 }
 
-void EnvObjectRecognition::DebugPrintArray(SendMsg* s){
+void EnvObjectRecognition::DebugPrintArray(SendMsg *s) {
   std::cout << "DebugPrintArray" << std::endl;
   int i = 0;
-  while(i < sizeof(SendMsg)) {
-   std::cout << *(int*)s << "\t";
-   // if ((i%NUM_MODELS) == 0) std::endl;
-   s = (SendMsg*)((char*)s + 4);
-   i+=4;
+
+  while (i < sizeof(SendMsg)) {
+    std::cout << *(int *)s << "\t";
+    // if ((i%NUM_MODELS) == 0) std::endl;
+    s = (SendMsg *)((char *)s + 4);
+    i += 4;
   }
+
   std::cout << "\n";
 }
 
-void EnvObjectRecognition::DebugPrintArrayRecv(RecvMsg* s){
+void EnvObjectRecognition::DebugPrintArrayRecv(RecvMsg *s) {
   std::cout << "DebugPrintArray" << std::endl;
   int i = 0;
-  while(i < sizeof(RecvMsg)) {
-   std::cout << *(int*)s << "\t";
-   // if ((i%NUM_MODELS) == 0) std::endl;
-   s = (RecvMsg*)((char*)s + 4);
-   i+=4;
+
+  while (i < sizeof(RecvMsg)) {
+    std::cout << *(int *)s << "\t";
+    // if ((i%NUM_MODELS) == 0) std::endl;
+    s = (RecvMsg *)((char *)s + 4);
+    i += 4;
   }
+
   std::cout << "\n";
 }
 
-void EnvObjectRecognition::SendbufPopulate(SendMsg *sendbuf, State s, State p, int sid, int pid) {
+void EnvObjectRecognition::SendbufPopulate(SendMsg *sendbuf, State s, State p,
+                                           int sid, int pid) {
   int i = 0;
   // double* temp = (double*)sendbuf;
 
@@ -444,68 +455,85 @@ void EnvObjectRecognition::SendbufPopulate(SendMsg *sendbuf, State s, State p, i
   // memset(sendbuf, 0, sizeof(SendMsg));
 
 
-  for(std::vector<int>::iterator obj_it = s.object_ids.begin(); obj_it != s.object_ids.end(); obj_it++) {
+  for (std::vector<int>::iterator obj_it = s.object_ids.begin();
+       obj_it != s.object_ids.end(); obj_it++) {
     sendbuf->source_ids[i++] = *obj_it;
   }
-  while(i < NUM_MODELS) {
+
+  while (i < NUM_MODELS) {
     sendbuf->source_ids[i++] = -1;
   }
 
   // std::cout << "size 0: " << i << std::endl;
 
   i = 0;
-  for(std::vector<DiscPose>::iterator obj_it = s.disc_object_poses.begin(); obj_it != s.disc_object_poses.end(); obj_it++) {
+
+  for (std::vector<DiscPose>::iterator obj_it = s.disc_object_poses.begin();
+       obj_it != s.disc_object_poses.end(); obj_it++) {
     sendbuf->source_disc[i++] = obj_it->x;
     sendbuf->source_disc[i++] = obj_it->y;
     sendbuf->source_disc[i++] = obj_it->theta;
   }
-  while(i < 3*NUM_MODELS) {
+
+  while (i < 3 * NUM_MODELS) {
     sendbuf->source_disc[i++] = -1;
   }
 
   // std::cout << "size 1: " << i << std::endl;
 
   i = 0;
-  for(std::vector<Pose>::iterator obj_it = s.object_poses.begin(); obj_it != s.object_poses.end(); obj_it++) {
+
+  for (std::vector<Pose>::iterator obj_it = s.object_poses.begin();
+       obj_it != s.object_poses.end(); obj_it++) {
     sendbuf->source_pose[i++] = obj_it->x;
     sendbuf->source_pose[i++] = obj_it->y;
     sendbuf->source_pose[i++] = obj_it->theta;
   }
-  while(i < 3*NUM_MODELS) {
+
+  while (i < 3 * NUM_MODELS) {
     sendbuf->source_pose[i++] = -1.0;
   }
 
   // std::cout << "size 2: " << i << std::endl;
 
   i = 0;
-  for(std::vector<int>::iterator obj_it = p.object_ids.begin(); obj_it != p.object_ids.end(); obj_it++) {
+
+  for (std::vector<int>::iterator obj_it = p.object_ids.begin();
+       obj_it != p.object_ids.end(); obj_it++) {
     sendbuf->cand_ids[i++] = *obj_it;
   }
-  while(i < NUM_MODELS) {
+
+  while (i < NUM_MODELS) {
     sendbuf->cand_ids[i++] = -1;
   }
 
   // std::cout << "size 3: " << i << std::endl;
 
   i = 0;
-  for(std::vector<DiscPose>::iterator obj_it = p.disc_object_poses.begin(); obj_it != p.disc_object_poses.end(); obj_it++) {
+
+  for (std::vector<DiscPose>::iterator obj_it = p.disc_object_poses.begin();
+       obj_it != p.disc_object_poses.end(); obj_it++) {
     sendbuf->cand_disc[i++] = obj_it->x;
     sendbuf->cand_disc[i++] = obj_it->y;
     sendbuf->cand_disc[i++] = obj_it->theta;
   }
-  while(i < 3*NUM_MODELS) {
+
+  while (i < 3 * NUM_MODELS) {
     sendbuf->cand_disc[i++] = -1;
   }
 
   // std::cout << "size 4: " << i << std::endl;
 
   i = 0;
-  for(std::vector<Pose>::iterator obj_it = p.object_poses.begin(); obj_it != p.object_poses.end(); obj_it++) {
+
+  for (std::vector<Pose>::iterator obj_it = p.object_poses.begin();
+       obj_it != p.object_poses.end(); obj_it++) {
     sendbuf->cand_pose[i++] = obj_it->x;
     sendbuf->cand_pose[i++] = obj_it->y;
     sendbuf->cand_pose[i++] = obj_it->theta;
   }
-  while(i < 3*NUM_MODELS) {
+
+  while (i < 3 * NUM_MODELS) {
     sendbuf->cand_pose[i++] = -1.0;
   }
 
@@ -525,13 +553,16 @@ int EnvObjectRecognition::ExpectedCountScatter(int *expected) {
   return val;
 }
 
-void EnvObjectRecognition::DataScatter(SendMsg* sendbuf, SendMsg* getbuf, int expected_count) {
+void EnvObjectRecognition::DataScatter(SendMsg *sendbuf, SendMsg *getbuf,
+                                       int expected_count) {
   int nitems = 9;
-  int blocklengths[9] = {NUM_MODELS, NUM_MODELS*3, NUM_MODELS*3,
-                        NUM_MODELS, NUM_MODELS*3, NUM_MODELS*3,
-                        1, 1, 1};
+  int blocklengths[9] = {NUM_MODELS, NUM_MODELS * 3, NUM_MODELS * 3,
+                         NUM_MODELS, NUM_MODELS * 3, NUM_MODELS * 3,
+                         1, 1, 1
+                        };
   MPI_Datatype types[9] = {MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_INT, MPI_DOUBLE,
-                            MPI_INT, MPI_INT, MPI_INT};
+                           MPI_INT, MPI_INT, MPI_INT
+                          };
 
   MPI_Datatype mpi_sendbuf;
   MPI_Aint offset[9];
@@ -548,27 +579,29 @@ void EnvObjectRecognition::DataScatter(SendMsg* sendbuf, SendMsg* getbuf, int ex
   MPI_Type_create_struct(nitems, blocklengths, offset, types, &mpi_sendbuf);
   MPI_Type_commit(&mpi_sendbuf);
   std::cout << "Proc: " << id << "going to Scatter" << std::endl;
-  MPI_Scatter(sendbuf, expected_count, mpi_sendbuf, 
-                getbuf, expected_count, mpi_sendbuf, 0, MPI_COMM_WORLD);
+  MPI_Scatter(sendbuf, expected_count, mpi_sendbuf,
+              getbuf, expected_count, mpi_sendbuf, 0, MPI_COMM_WORLD);
   std::cout << "Proc: " << id << "left Scatter" << std::endl;
 
 }
 
-int EnvObjectRecognition::GetRecvdState(State *work_source_state, 
-                                          State *work_cand_succs,
-                                          int *work_source_id,
-                                          int *work_cand_id,
-                                          SendMsg* dummy,
-                                          int val) {
+int EnvObjectRecognition::GetRecvdState(State *work_source_state,
+                                        State *work_cand_succs,
+                                        int *work_source_id,
+                                        int *work_cand_id,
+                                        SendMsg *dummy,
+                                        int val) {
   int count = 0;
   std::cout << "Proc: " << id << "reached start of GetRecvdState" << std::endl;
+
   for (int i = 0; i < val; i++) {
     // DebugPrintArray(dummy);
-    
-    if(dummy[i].valid == 1){
+
+    if (dummy[i].valid == 1) {
       count++;
-      for(int j = 0; j < NUM_MODELS; j++){
-        if( (dummy[i].source_ids)[j] != -1){
+
+      for (int j = 0; j < NUM_MODELS; j++) {
+        if ( (dummy[i].source_ids)[j] != -1) {
           int int_add = (dummy[i].source_ids)[j];
           work_source_state[i].object_ids.push_back(int_add);
         }
@@ -578,9 +611,11 @@ int EnvObjectRecognition::GetRecvdState(State *work_source_state,
       // std::cout << "Proc: " << id << "reached start of GetRecvdState 1" << std::endl;
 
       int j;
-      for(int k = 0; k < NUM_MODELS; k++){
+
+      for (int k = 0; k < NUM_MODELS; k++) {
         j = k * 3;
-        if( (dummy[i].source_disc)[j] != -1){
+
+        if ( (dummy[i].source_disc)[j] != -1) {
           DiscPose disc(0, 0, 0);
           // std::cout << "Proc: " << id << "reached start of GetRecvdState k1" << std::endl;
           disc.x = (dummy[i].source_disc)[j++];
@@ -596,9 +631,11 @@ int EnvObjectRecognition::GetRecvdState(State *work_source_state,
       // std::cout << "Proc: " << id << "reached start of GetRecvdState 2" << std::endl;
 
       j = 0;
-      for(int k = 0; k < NUM_MODELS; k++){
+
+      for (int k = 0; k < NUM_MODELS; k++) {
         j = k * 3;
-        if( (dummy[i].source_pose)[j] != -1.0){
+
+        if ( (dummy[i].source_pose)[j] != -1.0) {
           Pose pose;
           // std::cout << "Proc: " << id << "reached start of GetRecvdState k5" << std::endl;
           pose.x = (dummy[i].source_pose)[j++];
@@ -614,8 +651,8 @@ int EnvObjectRecognition::GetRecvdState(State *work_source_state,
 
       // DebugPrintArray(&dummy[i]);
 
-      for(int j = 0; j < NUM_MODELS; j++){
-        if( (dummy[i].cand_ids)[j] != -1){
+      for (int j = 0; j < NUM_MODELS; j++) {
+        if ( (dummy[i].cand_ids)[j] != -1) {
           int id_add = (dummy[i].cand_ids)[j];
           // std::cout << "Proc: " << id << "reached start of GetRecvdState k6: " << id_add << std::endl;
           work_cand_succs[i].object_ids.push_back(id_add);
@@ -625,9 +662,10 @@ int EnvObjectRecognition::GetRecvdState(State *work_source_state,
 
       // std::cout << "Proc: " << id << "reached start of GetRecvdState 4" << std::endl;
 
-      for(int k = 0; k < NUM_MODELS; k++){
+      for (int k = 0; k < NUM_MODELS; k++) {
         j = k * 3;
-        if( (dummy[i].cand_disc)[j] != -1){
+
+        if ( (dummy[i].cand_disc)[j] != -1) {
           DiscPose disc(0, 0, 0);
           // std::cout << "Proc: " << id << "reached start of GetRecvdState k7" << std::endl;
           disc.x = (dummy[i].cand_disc)[j++];
@@ -640,9 +678,11 @@ int EnvObjectRecognition::GetRecvdState(State *work_source_state,
       // std::cout << "Proc: " << id << "reached start of GetRecvdState 5" << std::endl;
 
       j = 0;
-      for(int k = 0; k < NUM_MODELS; k++){
+
+      for (int k = 0; k < NUM_MODELS; k++) {
         j = k * 3;
-        if( (dummy[i].cand_pose)[j] != -1.0){
+
+        if ( (dummy[i].cand_pose)[j] != -1.0) {
           Pose pose(0, 0, 0);
           // std::cout << "Proc: " << id << "reached start of GetRecvdState k8" << std::endl;
           pose.x = (dummy[i].cand_pose)[j++];
@@ -665,36 +705,45 @@ int EnvObjectRecognition::GetRecvdState(State *work_source_state,
   return count;
 }
 
-void EnvObjectRecognition::RecvbufPopulate(RecvMsg* sendbuf, 
-                                            State& s,
-                                            StateProperties& child_properties,
-                                            int cost) {
+void EnvObjectRecognition::RecvbufPopulate(RecvMsg *sendbuf,
+                                           State &s,
+                                           StateProperties &child_properties,
+                                           int cost) {
 
   int i = 0;
-  for(std::vector<int>::iterator obj_it = s.object_ids.begin(); obj_it != s.object_ids.end(); obj_it++) {
+
+  for (std::vector<int>::iterator obj_it = s.object_ids.begin();
+       obj_it != s.object_ids.end(); obj_it++) {
     sendbuf->child_ids[i++] = *obj_it;
   }
-  while(i < NUM_MODELS) {
+
+  while (i < NUM_MODELS) {
     sendbuf->child_ids[i++] = -1;
   }
 
   i = 0;
-  for(std::vector<DiscPose>::iterator obj_it = s.disc_object_poses.begin(); obj_it != s.disc_object_poses.end(); obj_it++) {
+
+  for (std::vector<DiscPose>::iterator obj_it = s.disc_object_poses.begin();
+       obj_it != s.disc_object_poses.end(); obj_it++) {
     sendbuf->child_disc[i++] = obj_it->x;
     sendbuf->child_disc[i++] = obj_it->y;
     sendbuf->child_disc[i++] = obj_it->theta;
   }
-  while(i < 3*NUM_MODELS) {
+
+  while (i < 3 * NUM_MODELS) {
     sendbuf->child_disc[i++] = -1;
   }
 
   i = 0;
-  for(std::vector<Pose>::iterator obj_it = s.object_poses.begin(); obj_it != s.object_poses.end(); obj_it++) {
+
+  for (std::vector<Pose>::iterator obj_it = s.object_poses.begin();
+       obj_it != s.object_poses.end(); obj_it++) {
     sendbuf->child_pose[i++] = obj_it->x;
     sendbuf->child_pose[i++] = obj_it->y;
     sendbuf->child_pose[i++] = obj_it->theta;
   }
-  while(i < 3*NUM_MODELS) {
+
+  while (i < 3 * NUM_MODELS) {
     sendbuf->child_pose[i++] = -1.0;
   }
 
@@ -705,11 +754,13 @@ void EnvObjectRecognition::RecvbufPopulate(RecvMsg* sendbuf,
 
 }
 
-void EnvObjectRecognition::DataGather(RecvMsg* recvbuf, RecvMsg* getresult, int expected_count) {
+void EnvObjectRecognition::DataGather(RecvMsg *recvbuf, RecvMsg *getresult,
+                                      int expected_count) {
   int nitems = 7;
-  int blocklengths[7] = {NUM_MODELS, NUM_MODELS*3, NUM_MODELS*3, 1, 1, 1, 1};
+  int blocklengths[7] = {NUM_MODELS, NUM_MODELS * 3, NUM_MODELS * 3, 1, 1, 1, 1};
   MPI_Datatype types[7] = {MPI_INT, MPI_INT, MPI_DOUBLE, MPI_UNSIGNED_SHORT,
-                            MPI_UNSIGNED_SHORT, MPI_INT, MPI_INT};
+                           MPI_UNSIGNED_SHORT, MPI_INT, MPI_INT
+                          };
 
   MPI_Datatype mpi_recvbuf;
   MPI_Aint offset[7];
@@ -723,30 +774,34 @@ void EnvObjectRecognition::DataGather(RecvMsg* recvbuf, RecvMsg* getresult, int 
 
   MPI_Type_create_struct(nitems, blocklengths, offset, types, &mpi_recvbuf);
   MPI_Type_commit(&mpi_recvbuf);
-  MPI_Gather(recvbuf, expected_count, mpi_recvbuf, 
-                getresult, expected_count, mpi_recvbuf, 0, MPI_COMM_WORLD);
+  MPI_Gather(recvbuf, expected_count, mpi_recvbuf,
+             getresult, expected_count, mpi_recvbuf, 0, MPI_COMM_WORLD);
 }
 
-int EnvObjectRecognition::GetRecvdResult(State *work_source_state, 
-                                          StateProperties *child_properties_result,
-                                          int *cost_result,
-                                          RecvMsg* dummy,
-                                          int tot) {
+int EnvObjectRecognition::GetRecvdResult(State *work_source_state,
+                                         StateProperties *child_properties_result,
+                                         int *cost_result,
+                                         RecvMsg *dummy,
+                                         int tot) {
   int count = 0;
+
   for (int i = 0; i < tot; i++) {
 
-    if(dummy[i].valid == 1){
+    if (dummy[i].valid == 1) {
       count++;
-      for(int j = 0; j < NUM_MODELS; j++){
-        if( (dummy[i].child_ids)[j] != -1){
+
+      for (int j = 0; j < NUM_MODELS; j++) {
+        if ( (dummy[i].child_ids)[j] != -1) {
           work_source_state[i].object_ids.push_back( (dummy[i].child_ids)[j] );
         }
       }
 
       int j;
-      for(int k = 0; k < NUM_MODELS; k++){
+
+      for (int k = 0; k < NUM_MODELS; k++) {
         j = k * 3;
-        if( (dummy[i].child_disc)[j] != -1){
+
+        if ( (dummy[i].child_disc)[j] != -1) {
           DiscPose disc(0, 0, 0);
           disc.x = (dummy[i].child_disc)[j++];
           disc.y = (dummy[i].child_disc)[j++];
@@ -756,9 +811,11 @@ int EnvObjectRecognition::GetRecvdResult(State *work_source_state,
       }
 
       j = 0;
-      for(int k = 0; k < NUM_MODELS; k++){
+
+      for (int k = 0; k < NUM_MODELS; k++) {
         j = k * 3;
-        if( (dummy[i].child_pose)[j] != -1.0){
+
+        if ( (dummy[i].child_pose)[j] != -1.0) {
           Pose pose(0, 0, 0);
           pose.x = (dummy[i].child_pose)[j++];
           pose.y = (dummy[i].child_pose)[j++];
@@ -858,44 +915,52 @@ void EnvObjectRecognition::GetSuccs(int source_state_id,
     }
   }
 
-  
+
   // Awesome work starts
 
   // int number = 3343;
   // MPI_Send(&number, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
 
   // std::cout << "Proc: " << id << " reached start of awesome code" << std::endl;
-  int next_multiple = candidate_succ_ids.size() + num_proc - (candidate_succ_ids.size() % num_proc);
-  SendMsg* sendbuf = (SendMsg*) malloc(next_multiple * sizeof(SendMsg));
-  for (int i = candidate_succ_ids.size(); i < next_multiple; i++)
+  int next_multiple = candidate_succ_ids.size() + num_proc -
+                      (candidate_succ_ids.size() % num_proc);
+  SendMsg *sendbuf = (SendMsg *) malloc(next_multiple * sizeof(SendMsg));
+
+  for (int i = candidate_succ_ids.size(); i < next_multiple; i++) {
     sendbuf[i].valid = -1;
-  SendMsg* tempbuf = sendbuf;
+  }
+
+  SendMsg *tempbuf = sendbuf;
 
   //populate sendbuf buffer
 
   int sz = candidate_succ_ids.size();
-  
+
   #pragma omp parallel for
-  for(unsigned int ii = 0; ii < sz; ++ii)
-    SendbufPopulate(&tempbuf[ii], source_state, candidate_succs[ii], source_state_id, candidate_succ_ids[ii]);
+
+  for (unsigned int ii = 0; ii < sz; ++ii) {
+    SendbufPopulate(&tempbuf[ii], source_state, candidate_succs[ii],
+                    source_state_id, candidate_succ_ids[ii]);
+  }
 
   // {
-    // DebugPrint(candidate_succs[ii]);
-    // if (ii < 8) {
-    //   DebugPrint(candidate_succs[ii]);
-    //   DebugPrintArray(tempbuf);
-    // }
+  // DebugPrint(candidate_succs[ii]);
+  // if (ii < 8) {
+  //   DebugPrint(candidate_succs[ii]);
+  //   DebugPrintArray(tempbuf);
+  // }
   //   tempbuf++;
   // }
 
   //count array so workers can allocate appropriately
-  int* expected_count = (int *) malloc(num_proc * sizeof(int));
+  int *expected_count = (int *) malloc(num_proc * sizeof(int));
   //split per processor
   int val = next_multiple / num_proc;
   assert((next_multiple % num_proc) == 0);
 
-  for (int i = 0; i < num_proc; i++)
+  for (int i = 0; i < num_proc; i++) {
     expected_count[i] = val;
+  }
 
   std::cout << "Proc: " << id << "populated buffer to send " << val << std::endl;
 
@@ -905,23 +970,23 @@ void EnvObjectRecognition::GetSuccs(int source_state_id,
   ExpectedCountScatter(expected_count);
   free(expected_count);
 
-  SendMsg* dummy = (SendMsg*) malloc(val * sizeof(SendMsg));
+  SendMsg *dummy = (SendMsg *) malloc(val * sizeof(SendMsg));
   DataScatter(sendbuf, dummy, val);
   std::cout << "Proc: " << id << "printing " << std::endl;
   // DebugPrintArray(dummy);
 
   free(sendbuf);
-  
-  State* work_source_state = new State[val];
+
+  State *work_source_state = new State[val];
 
   // State* work_cand_succs = (State*) malloc(val * sizeof(State));
-  State* work_cand_succs = new State[val];
+  State *work_cand_succs = new State[val];
 
-  int* work_source_id = (int *) malloc(val * sizeof(int));
-  int* work_cand_id = (int *) malloc(val * sizeof(int));
+  int *work_source_id = (int *) malloc(val * sizeof(int));
+  int *work_cand_id = (int *) malloc(val * sizeof(int));
 
   int count = GetRecvdState(work_source_state, work_cand_succs,
-                work_source_id, work_cand_id, dummy, val);
+                            work_source_id, work_cand_id, dummy, val);
 
   // MPI_Barrier(MPI_COMM_WORLD);
   // std::cout << "proc "<< id <<": reached MPI_Barrier" << std::endl;
@@ -929,57 +994,63 @@ void EnvObjectRecognition::GetSuccs(int source_state_id,
 
   // std::cout << "proc "<< id <<": reached MPI_Barrier" << std::endl;
 
-  State* adjusted_child_state = new State[val];
-  StateProperties* child_properties = new StateProperties[val];
-  int* cost = (int *) malloc(val * sizeof(int));
+  State *adjusted_child_state = new State[val];
+  StateProperties *child_properties = new StateProperties[val];
+  int *cost = (int *) malloc(val * sizeof(int));
 
   for (int ii = 0; ii < count; ii++) {
-    cost[ii] = GetTrueCost(work_source_state[ii], 
-                            work_cand_succs[ii],
-                            work_source_id[ii],
-                            work_cand_id[ii],
-                            &adjusted_child_state[ii],
-                            &child_properties[ii]);
+    cost[ii] = GetTrueCost(work_source_state[ii],
+                           work_cand_succs[ii],
+                           work_source_id[ii],
+                           work_cand_id[ii],
+                           &adjusted_child_state[ii],
+                           &child_properties[ii]);
   }
 
   // workers result buf
-  RecvMsg* recvbuf = (RecvMsg*) malloc(val * sizeof(RecvMsg));
-  for (int i = 0; i < val; i++)
-    recvbuf[i].valid = -1;
+  RecvMsg *recvbuf = (RecvMsg *) malloc(val * sizeof(RecvMsg));
 
-  RecvMsg* recvtemp = recvbuf;
+  for (int i = 0; i < val; i++) {
+    recvbuf[i].valid = -1;
+  }
+
+  RecvMsg *recvtemp = recvbuf;
 
   // #pragma omp parallel for
-  for (size_t ii = 0; ii < count; ++ii)
-    RecvbufPopulate(&recvtemp[ii], adjusted_child_state[ii], child_properties[ii], cost[ii]);
-    // DebugPrintArrayRecv(recvtemp);
-    // recvtemp++;
+  for (size_t ii = 0; ii < count; ++ii) {
+    RecvbufPopulate(&recvtemp[ii], adjusted_child_state[ii], child_properties[ii],
+                    cost[ii]);
+  }
 
-  std::cout << "proc "<< id <<": done RecvbufPopulate" << std::endl;
+  // DebugPrintArrayRecv(recvtemp);
+  // recvtemp++;
+
+  std::cout << "proc " << id << ": done RecvbufPopulate" << std::endl;
 
   // delete adjusted_child_state;
   // delete child_properties;
   // delete cost;
 
-  RecvMsg* getresult = (RecvMsg*) malloc(next_multiple * sizeof(RecvMsg));
+  RecvMsg *getresult = (RecvMsg *) malloc(next_multiple * sizeof(RecvMsg));
   std::cout << "val: " << val << "next_multiple: " << next_multiple << std::endl;
-  
+
   DataGather(recvbuf, getresult, val);
-  std::cout << "proc "<< id <<": done DataGather" << std::endl;
+  std::cout << "proc " << id << ": done DataGather" << std::endl;
 
   free(recvbuf);
 
-  State* child_result = new State[candidate_succ_ids.size()];
-  StateProperties* child_properties_result = new StateProperties[candidate_succ_ids.size()];
+  State *child_result = new State[candidate_succ_ids.size()];
+  StateProperties *child_properties_result = new
+  StateProperties[candidate_succ_ids.size()];
 
-  int* cost_result = (int *) malloc(candidate_succ_ids.size() * sizeof(int));
+  int *cost_result = (int *) malloc(candidate_succ_ids.size() * sizeof(int));
 
-  GetRecvdResult(child_result, 
-                child_properties_result,
-                cost_result,
-                getresult,
-                candidate_succ_ids.size());
-  std::cout << "proc "<< id <<": done GetRecvdResult" << std::endl;
+  GetRecvdResult(child_result,
+                 child_properties_result,
+                 cost_result,
+                 getresult,
+                 candidate_succ_ids.size());
+  std::cout << "proc " << id << ": done GetRecvdResult" << std::endl;
 
 
   //---- PARALLELIZE THIS LOOP-----------//
@@ -1206,8 +1277,8 @@ int EnvObjectRecognition::GetTrueCost(const State source_state,
                                       State *adjusted_child_state, StateProperties *child_properties) {
 
 #if PROFILE
-  FILE * pFile;
-  pFile = fopen ("/home/namanj/profile.txt","a");
+  FILE *pFile;
+  pFile = fopen ("/home/namanj/profile.txt", "a");
   double startTime = CycleTimer::currentSeconds();
 #endif
 
@@ -1313,6 +1384,7 @@ int EnvObjectRecognition::GetTrueCost(const State source_state,
       }
     }
   }
+
   kinect_simulator_->rl_->getPointCloudFromBuffer (cloud_out, new_pixel_buffer,
                                                    true,
                                                    env_params_.camera_pose);
@@ -1332,6 +1404,7 @@ int EnvObjectRecognition::GetTrueCost(const State source_state,
              target_cost,
              source_cost, total_cost);
   }
+
 #if PROFILE
   double endTime = CycleTimer::currentSeconds();
   diff += (endTime - startTime);
@@ -1515,7 +1588,8 @@ int EnvObjectRecognition::GetSourceCost(const PointCloudPtr
     float dist = pcl::euclideanDistance(obj_center, projected_point);
 
     // bool point_in_collision = dist <= obj_models_[last_obj_id].inscribed_rad();
-    bool point_in_collision = dist <= 3.0 * obj_models_[last_obj_id].GetCircumscribedRadius();
+    bool point_in_collision = dist <= 3.0 *
+                              obj_models_[last_obj_id].GetCircumscribedRadius();
     // bool point_in_collision = num_neighbors_found >= kCollisionPointsThresh;
 
 
@@ -1846,12 +1920,14 @@ void EnvObjectRecognition::SetObservation(int num_objects,
   knn.reset(new pcl::search::KdTree<PointT>(true));
   knn->setInputCloud(observed_cloud_);
 
-  std::stringstream ss;
-  ss.precision(20);
-  ss << kDebugDir + "obs_cloud" << ".pcd";
-  pcl::PCDWriter writer;
-  writer.writeBinary (ss.str()  , *observed_cloud_);
-  PrintImage(kDebugDir + string("ground_truth.png"), observed_depth_image_);
+  if (id == 0) {
+    std::stringstream ss;
+    ss.precision(20);
+    ss << kDebugDir + "obs_cloud" << ".pcd";
+    pcl::PCDWriter writer;
+    writer.writeBinary (ss.str()  , *observed_cloud_);
+    PrintImage(kDebugDir + string("ground_truth.png"), observed_depth_image_);
+  }
 }
 
 void EnvObjectRecognition::SetObservation(int num_objects,
@@ -1875,8 +1951,9 @@ void EnvObjectRecognition::SetObservation(vector<int> object_ids,
 
   for (size_t ii = 0; ii < object_ids.size(); ++ii) {
     if (object_ids[ii] >= env_params_.num_models) {
-      ROS_ERROR("Invalid object ID %d with (%d) when setting ground truth", object_ids[ii],
-                      env_params_.num_models);
+      ROS_ERROR("Invalid object ID %d with (%d) when setting ground truth",
+                object_ids[ii],
+                env_params_.num_models);
     }
 
     s.object_ids.push_back(object_ids[ii]);
@@ -2400,4 +2477,5 @@ State EnvObjectRecognition::ComputeVFHPoses() {
 void EnvObjectRecognition::SetDebugOptions(bool image_debug) {
   image_debug_ = image_debug;
 }
+
 
