@@ -39,7 +39,7 @@ void ConfigParser::Parse(const string &config_file) {
   pcd_file_path = boost::lexical_cast<string>(line.c_str());
 
   // TODO: Convert to absolute path.
-  if (kAPC) {
+/*  if (kAPC) {
     pcd_file_path = ros::package::getPath("sbpl_perception") + "/data/perchinput/" +
                     pcd_file_path;
     boost::filesystem::path pcd_path(pcd_file_path);
@@ -47,7 +47,7 @@ void ConfigParser::Parse(const string &config_file) {
       printf("Error: PCD path %s is invalid/does not exist\n", pcd_file_path.c_str());
       return;
     }
-  }
+  }*/
 
   cout << "pcd path: " << pcd_file_path << endl;
 

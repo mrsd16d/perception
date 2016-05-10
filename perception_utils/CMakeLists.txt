@@ -57,7 +57,7 @@ target_link_libraries(vfh_generate_views ${PROJECT_NAME})
 add_executable(align_pcd_to_world tools/align_pcd_to_world.cpp)
 target_link_libraries(align_pcd_to_world ${PROJECT_NAME})
 
-add_executable(depth_image_smoother
-  tools/depth_image_smoother.cpp)
-target_link_libraries(depth_image_smoother ${PROJECT_NAME})
+#add_executable(depth_image_smoother
+#  tools/depth_image_smoother.cpp)
+#target_link_libraries(depth_image_smoother ${PROJECT_NAME})
 
