@@ -1,3 +1,8 @@
+<launch>
+  <rosparam param="model_bank" subst_value="True">
+
+    [
+    <!--Format-->
     <!--
       [name,
       file_descriptor,
@@ -553,6 +558,6 @@
     0.1,
     1
     ]
-
     ]
-]
+  </rosparam>
+</launch>

@@ -78,7 +78,7 @@
       <!-- <param name="config_file" value="$(find sbpl_perception)/data/perchinput/1462057862_perch.txt"/> -->
       <!-- <param name="config_file" value="$(find sbpl_perception)/data/perchinput/1462057962_perch.txt"/> -->
       <!-- <param name="config_file" value="$(find sbpl_perception)/data/perchinput/1462058013_perch.txt"/> -->
-      <param name="config_file" value="$(find sbpl_perception)/data/perchinput/1462063749_perch.txt"/>
+      <param name="config_file" value="$(find sbpl_perception)/data/perchinput/1463086077_perch.txt"/>
 
       <!-- <param name="config_file" value="$(find sbpl_perception)/data/perchinput/1462052875_perch.txt"/> -->
       <!-- <param name="config_file" value="$(find sbpl_perception)/data/perchinput/1462053738_perch.txt"/> -->
