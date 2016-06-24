@@ -56,6 +56,11 @@ ObjectRecognizer::ObjectRecognizer(std::shared_ptr<boost::mpi::communicator>
     private_nh.param("search_resolution_yaw", search_resolution_yaw,
                      0.3926991);
 
+    if (kAPC) {
+      private_nh.param("use_full_object_point_cloud", use_full_object_point_cloud_,
+                       false);
+    }
+
     XmlRpc::XmlRpcValue model_bank_list;
 
     std::string param_key;
@@ -302,6 +307,7 @@ bool ObjectRecognizer::LocalizeObjects(const RecognitionInput &input,
               cout << "Unknown solution criterion!" << endl;
               return false;
             }
+
             cout << "Iteration solution cost: " << solution_cost << std::endl;
           }
 
@@ -317,14 +323,44 @@ bool ObjectRecognizer::LocalizeObjects(const RecognitionInput &input,
       }
     }
 
-    last_object_point_clouds_ = object_point_clouds;
-    *detected_poses = best_detected_poses;
+    if (plan_success) {
+
+      if (use_full_object_point_cloud_) {
+        // Load pcd from disk and apply transform.
+        string model_name = target_object + std::to_string(best_variant_idx_);
+        string model_file = model_bank_.at(model_name).file;
+        string pcd_file = model_file;
+        pcd_file.replace(pcd_file.size() - 3, 3, "pcd");
+        // Read the input PCD file from disk.
+        pcl::PointCloud<PointT>::Ptr model_cloud(new PointCloud);
+
+        if (pcl::io::loadPCDFile<PointT>(pcd_file.c_str(), *model_cloud) != 0) {
+          if (IsMaster(mpi_world_)) {
+            cerr << "Could not find the PCD file " << pcd_file <<
+                 " . Check if you have the pcd files corresponding to the object model variants in the same folder as the object models"
+                 << endl;
+          }
+          return -1;
+        }
+
+        // Transform the pcd to the scene.
+        transformPointCloud(*model_cloud, *model_cloud, best_transform_);
+        last_object_point_clouds_.clear();
+        last_object_point_clouds_.push_back(model_cloud);
+      } else {
+        last_object_point_clouds_ = object_point_clouds;
+      }
+
+      *detected_poses = best_detected_poses;
+    }
+
     if (IsMaster(mpi_world_)) {
       last_planning_stats_[0].time = total_time;
       last_planning_stats_[0].cost = best_solution_cost;
       last_planning_stats_[0].expands = total_expands;
-      cout << endl << "-----------------------------------------------" << endl; 
-      cout << "Total PERCH Time: " << total_time << " Solution Cost: " << best_solution_cost << endl;
+      cout << endl << "-----------------------------------------------" << endl;
+      cout << "Total PERCH Time: " << total_time << " Solution Cost: " <<
+           best_solution_cost << endl;
       cout << "-----------------------------------------------" << endl;
       // TODO: accumulate env stats over iterations as well.
     }
@@ -401,6 +437,13 @@ bool ObjectRecognizer::RunPlanner(vector<ContPose> *detected_poses) const {
                                     static_cast<MHAReplanParams>(planner_params_), &sol_cost);
     ROS_INFO("Done planning");
 
+    // Planning episode statistics.
+    vector<PlannerStats> stats_vector;
+    planner_->get_search_stats(&stats_vector);
+    last_planning_stats_ = stats_vector;
+    EnvStats env_stats = env_obj_->GetEnvStats();
+    last_env_stats_ = env_stats;
+
     if (plan_success) {
       ROS_INFO("Size of solution: %d", static_cast<int>(solution_state_ids.size()));
     } else {
@@ -429,12 +472,6 @@ bool ObjectRecognizer::RunPlanner(vector<ContPose> *detected_poses) const {
              << pose.yaw() << endl;
       }
 
-      // Planning episode statistics.
-      vector<PlannerStats> stats_vector;
-      planner_->get_search_stats(&stats_vector);
-      last_planning_stats_ = stats_vector;
-      EnvStats env_stats = env_obj_->GetEnvStats();
-      last_env_stats_ = env_stats;
       last_object_point_clouds_ = env_obj_->GetObjectPointClouds(solution_state_ids);
 
       cout << endl << "[[[[[[[[  Stats  ]]]]]]]]:" << endl;
@@ -470,11 +507,14 @@ bool ObjectRecognizer::RunPlanner(vector<ContPose> *detected_poses) const {
     }
   }
 
+  mpi_world_->barrier();
   broadcast(*mpi_world_, plan_success, kMasterRank);
-  broadcast(*mpi_world_, *detected_poses, kMasterRank);
+
+  if (plan_success) {
+    broadcast(*mpi_world_, *detected_poses, kMasterRank);
+  }
+
   mpi_world_->barrier();
   return plan_success;
 }
 }  // namespace
-
-
